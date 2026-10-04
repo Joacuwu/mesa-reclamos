@@ -1,0 +1,35 @@
+@startuml secuencia
+title Cambio de estado de un reclamo
+skinparam shadowing false
+autonumber
+actor Operador
+participant "Angular\n(DetallePagina)" as Web
+participant "ReclamosController" as Api
+participant "ReclamoServicio" as Serv
+participant "ReclamoRepositorio" as Repo
+database "PostgreSQL\nsp_reclamo_cambiar_estado" as BD
+
+Operador -> Web : clic en "Pasar a En curso"
+Web -> Api : POST /api/reclamos/{numero}/estado\nAuthorization: Bearer JWT
+Api -> Serv : CambiarEstadoAsync(numero, EnCurso, usuario, comentario)
+Serv -> Repo : ObtenerAsync(numero)
+Repo -> BD : SELECT * FROM fn_reclamo_obtener(@numero)
+BD --> Repo : reclamo (estado Abierto)
+Serv -> Serv : Reclamo.PuedePasar(Abierto, EnCurso)
+alt transición no permitida
+  Serv --> Api : ReglaDeNegocioException
+  Api --> Web : 422 ProblemDetails
+else permitida
+  Serv -> Repo : CambiarEstadoAsync(...)
+  Repo -> BD : CALL sp_reclamo_cambiar_estado(...)
+  BD -> BD : SELECT ... FOR UPDATE\nvalida en estado_transiciones\nUPDATE reclamos + INSERT historial
+  alt otro operador lo cambió antes
+    BD --> Repo : SQLSTATE RC422
+    Repo --> Api : ReglaDeNegocioException → 422
+  else ok
+    BD --> Repo : ok
+    Api --> Web : 200 con el detalle actualizado
+    Web --> Operador : estado e historial nuevos
+  end
+end
+@enduml

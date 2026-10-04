@@ -1,0 +1,7 @@
+{
+  "name": "mesa-reclamos-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": { "recorrido": "node recorrido.mjs" },
+  "devDependencies": { "playwright": "1.56.1" }
+}

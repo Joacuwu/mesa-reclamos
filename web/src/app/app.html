@@ -1,0 +1,17 @@
+@if (sesion.sesion(); as s) {
+  <header class="barra-superior">
+    <a class="marca" routerLink="/reclamos">Mesa de Reclamos</a>
+    <nav>
+      <a routerLink="/reclamos" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">Reclamos</a>
+      <a routerLink="/reclamos/nuevo" routerLinkActive="activo">Nuevo</a>
+      @if (sesion.esSupervisor()) { <a routerLink="/reporte" routerLinkActive="activo">Reporte SLA</a> }
+    </nav>
+    <div class="usuario">
+      <span>{{ s.nombre }} <span class="sutil">· {{ s.rol }}</span></span>
+      <button class="secundario" (click)="sesion.salir()">Salir</button>
+    </div>
+  </header>
+}
+<main [class.contenido]="sesion.sesion()">
+  <router-outlet />
+</main>

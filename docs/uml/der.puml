@@ -1,0 +1,47 @@
+@startuml der
+title Modelo de datos (PostgreSQL)
+skinparam shadowing false
+hide circle
+skinparam linetype ortho
+entity clientes {
+  * id : BIGSERIAL <<PK>>
+  --
+  * cuit : CHAR(11) <<UNIQUE>>
+  * razon_social : VARCHAR(120)
+  * email : VARCHAR(120)
+  telefono : VARCHAR(30)
+}
+entity reclamos {
+  * id : BIGSERIAL <<PK>>
+  --
+  * numero : VARCHAR(20) <<UNIQUE>>
+  * cliente_id : BIGINT <<FK>>
+  * asunto, descripcion
+  * prioridad, canal, estado
+  asignado_a : VARCHAR(40)
+  * fecha_alta, fecha_limite : TIMESTAMPTZ
+  fecha_cierre : TIMESTAMPTZ
+}
+entity reclamo_historial {
+  * id : BIGSERIAL <<PK>>
+  --
+  * reclamo_id : BIGINT <<FK>>
+  * fecha : TIMESTAMPTZ
+  * usuario : VARCHAR(40)
+  estado_anterior, estado_nuevo
+  comentario : TEXT
+}
+entity estado_transiciones {
+  * desde : VARCHAR(20) <<PK>>
+  * hacia : VARCHAR(20) <<PK>>
+}
+entity usuarios {
+  * id : BIGSERIAL <<PK>>
+  --
+  * login : VARCHAR(40) <<UNIQUE>>
+  * nombre, rol
+  * hash_clave : TEXT (PBKDF2)
+}
+clientes ||--o{ reclamos
+reclamos ||--o{ reclamo_historial
+@enduml

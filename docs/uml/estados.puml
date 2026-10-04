@@ -1,0 +1,15 @@
+@startuml estados
+title Ciclo de vida de un reclamo
+skinparam shadowing false
+[*] --> Abierto : alta (web, teléfono, email o SOAP)
+Abierto --> EnCurso : un operador lo toma
+Abierto --> Rechazado : no corresponde\n(motivo obligatorio)
+EnCurso --> EsperandoCliente : falta información
+EsperandoCliente --> EnCurso : el cliente respondió
+EsperandoCliente --> Cerrado : el cliente no respondió
+EnCurso --> Resuelto : se solucionó
+Resuelto --> EnCurso : el cliente dice que sigue
+Resuelto --> Cerrado : confirmado
+Cerrado --> [*]
+Rechazado --> [*]
+@enduml

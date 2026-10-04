@@ -1,0 +1,118 @@
+@startuml clases
+title Mesa de Reclamos - Diagrama de clases (dominio y capas)
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam packageStyle rectangle
+hide empty members
+
+package "Reclamos.Dominio" {
+  enum EstadoReclamo {
+    Abierto
+    EnCurso
+    EsperandoCliente
+    Resuelto
+    Cerrado
+    Rechazado
+  }
+  enum Prioridad {
+    Baja
+    Media
+    Alta
+    Critica
+  }
+  enum Canal {
+    Web
+    Telefono
+    Email
+    Soap
+  }
+  class Reclamo {
+    + Numero : string
+    + ClienteCuit : string
+    + Asunto : string
+    + Descripcion : string
+    + Prioridad : Prioridad
+    + Canal : Canal
+    + Estado : EstadoReclamo
+    + AsignadoA : string?
+    + FechaAlta : DateTime
+    + FechaLimite : DateTime
+    + FechaCierre : DateTime?
+    --
+    + {static} PuedePasar(desde, hacia) : bool
+    + {static} EstadosSiguientes(actual)
+    + EstaFinalizado : bool
+    + EstaVencido(ahora) : bool
+  }
+  class Movimiento <<record>> {
+    + Fecha : DateTime
+    + Usuario : string
+    + EstadoAnterior : EstadoReclamo?
+    + EstadoNuevo : EstadoReclamo?
+    + Comentario : string?
+  }
+  class Sla <<static>> {
+    + HorasPara(prioridad) : int
+    + FechaLimite(alta, prioridad) : DateTime
+  }
+  class Cuit <<static>> {
+    + Normalizar(cuit) : string
+    + EsValido(cuit) : bool
+  }
+  interface IReclamoRepositorio {
+    + CrearAsync(...)
+    + ObtenerAsync(numero)
+    + BuscarAsync(filtro)
+    + CambiarEstadoAsync(...)
+    + AgregarComentarioAsync(...)
+    + ReporteSlaAsync(desde, hasta)
+  }
+  interface IClienteRepositorio
+  interface IUsuarioRepositorio
+  class ReclamoServicio {
+    + CrearAsync(nuevo, usuario) : string
+    + ObtenerAsync(numero) : Reclamo
+    + BuscarAsync(filtro)
+    + CambiarEstadoAsync(numero, estado, usuario, comentario)
+    + AgregarComentarioAsync(...)
+    + ReporteSlaAsync(desde, hasta)
+  }
+  class ReglaDeNegocioException
+  class NoEncontradoException
+}
+
+package "Reclamos.Datos (Npgsql + stored procedures)" {
+  class ReclamoRepositorio
+  class ClienteRepositorio
+  class UsuarioRepositorio
+  class Esquema <<static>>
+}
+
+package "Reclamos.Api" {
+  class ReclamosController
+  class ReportesController
+  class AuthController
+  class ReclamosSoap <<SOAP>>
+  class ManejoDeErrores
+}
+
+Reclamo "1" *-- "many" Movimiento : Historial
+Reclamo --> EstadoReclamo
+Reclamo --> Prioridad
+Reclamo --> Canal
+ReclamoServicio --> IReclamoRepositorio
+ReclamoServicio --> IClienteRepositorio
+ReclamoServicio ..> Sla
+ReclamoServicio ..> Cuit
+ReclamoServicio ..> ReglaDeNegocioException : lanza
+ReclamoServicio ..> NoEncontradoException : lanza
+ReclamoRepositorio ..|> IReclamoRepositorio
+ClienteRepositorio ..|> IClienteRepositorio
+UsuarioRepositorio ..|> IUsuarioRepositorio
+ReclamosController --> ReclamoServicio
+ReportesController --> ReclamoServicio
+ReclamosSoap --> ReclamoServicio
+AuthController --> IUsuarioRepositorio
+ManejoDeErrores ..> ReglaDeNegocioException : 422
+ManejoDeErrores ..> NoEncontradoException : 404
+@enduml

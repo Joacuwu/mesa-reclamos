@@ -1,0 +1,10 @@
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+web/node_modules/
+web/.angular/
+e2e/node_modules/
+# La interfaz compilada se genera con "npm run build" en web/
+src/Reclamos.Api/wwwroot/
